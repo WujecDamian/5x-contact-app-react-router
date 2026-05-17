@@ -29,6 +29,10 @@ const router = createBrowserRouter([
         loader: contactLoader,
         action: editAction,
       },
+      {
+        path: "contacts/:contactId/delete",
+        action: destroyAction,
+      },
     ],
   },
 ]);
