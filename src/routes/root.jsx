@@ -6,7 +6,9 @@ import {
   redirect,
   NavLink,
   useNavigation,
+  useSubmit,
 } from "react-router-dom";
+import { useEffect } from "react";
 import { getContacts, createContact } from "../contacts";
 
 export async function action() {
@@ -15,14 +17,25 @@ export async function action() {
   return redirect(`/contacts/${contact.id}/edit`);
 }
 
-export async function loader() {
-  const contacts = await getContacts();
-  return { contacts };
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q");
+  const contacts = await getContacts(q);
+  return { contacts, q };
 }
 
 export default function Root() {
-  const { contacts } = useLoaderData();
+  const { contacts, q } = useLoaderData();
   const navigation = useNavigation();
+  const submit = useSubmit();
+
+  const searching =
+    navigation.location &&
+    new URLSearchParams(navigation.location.search).has("q");
+
+  new useEffect(() => {
+    document.getElementById("q").value = q;
+  }, [q]);
   return (
     <>
       <div id="sidebar">
@@ -35,8 +48,12 @@ export default function Root() {
               aria-label="Search contacts"
               placeholder="search"
               name="q"
+              defaultValue={q}
+              onChange={(event) => {
+                submit(event.currentTarget.form);
+              }}
             />
-            <div id="search-spinner" aria-hidden hidden={true}></div>
+            <div id="search-spinner" aria-hidden hidden={!searching}></div>
             <div className="sr-only" aria-live="polite"></div>
           </Form>
           <Form method="post">
